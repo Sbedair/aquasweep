@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AquaSweep — The Ocean Restoration Vessel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:wght@300;400;500&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ocean-deep: #020b18;
+    --ocean-mid: #041e36;
+    --ocean-surface: #073d6b;
+    --ocean-light: #0a6ea6;
+    --foam: #c8e8f5;
+    --white: #f0f7fb;
+    --gold: #c8a96e;
+    --gold-light: #e8c98a;
+    --trash-accent: #e05a2b;
+    --clean-green: #2ecc71;
+    --text-muted: rgba(200, 232, 245, 0.5);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ocean-deep);
+    color: var(--white);
+    font-family: 'Crimson Pro', serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    position: fixed;
+    width: 12px; height: 12px;
+    background: var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s, width 0.2s, height 0.2s, background 0.2s;
+    mix-blend-mode: screen;
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 40px; height: 40px;
+    border: 1px solid rgba(200, 169, 110, 0.4);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.15s ease-out, width 0.3s, height 0.3s;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 24px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(to bottom, rgba(2,11,24,0.95), transparent);
+    backdrop-filter: blur(2px);
+  }
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-decoration: none;
+  }
+  .nav-links {
+    display: flex;
+    gap: 40px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--foam);
+    text-decoration: none;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  .nav-links a:hover { opacity: 1; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    position: relative;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .ocean-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 120% 60% at 50% 110%, var(--ocean-surface) 0%, transparent 60%),
+      radial-gradient(ellipse 80% 40% at 20% 80%, #0a3d6b 0%, transparent 50%),
+      linear-gradient(180deg, var(--ocean-deep) 0%, #041526 40%, #052035 70%, #062840 100%);
+  }
+
+  /* Animated water waves */
+  .waves-container {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 300px;
+    overflow: hidden;
+  }
+  .wave {
+    position: absolute;
+    bottom: 0;
+    width: 200%;
+    height: 100%;
+  }
+  .wave svg {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+  }
+  .wave-1 { animation: wave-move 8s linear infinite; opacity: 0.4; }
+  .wave-2 { animation: wave-move 12s linear infinite reverse; opacity: 0.25; }
+  .wave-3 { animation: wave-move 6s linear infinite; opacity: 0.15; }
+
+  @keyframes wave-move {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* Floating particles */
+  .particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+  .particle {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: var(--foam);
+    border-radius: 50%;
+    animation: float-up linear infinite;
+    opacity: 0;
+  }
+  @keyframes float-up {
+    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+    10% { opacity: 0.6; }
+    90% { opacity: 0.3; }
+    100% { transform: translateY(-20px) translateX(30px); opacity: 0; }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 10;
+    padding: 0 60px;
+    max-width: 900px;
+  }
+
+  .hero-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: fade-up 0.8s ease forwards;
+    opacity: 0;
+  }
+  .hero-tag::before {
+    content: '';
+    width: 40px; height: 1px;
+    background: var(--gold);
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(60px, 10vw, 120px);
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    margin-bottom: 32px;
+    animation: fade-up 0.8s 0.2s ease forwards;
+    opacity: 0;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--foam);
+    display: block;
+  }
+  .hero-title .title-accent {
+    color: var(--gold);
+  }
+
+  .hero-subtitle {
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 1.7;
+    max-width: 520px;
+    color: rgba(200,232,245,0.8);
+    margin-bottom: 48px;
+    animation: fade-up 0.8s 0.4s ease forwards;
+    opacity: 0;
+  }
+
+  .hero-ctas {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    animation: fade-up 0.8s 0.6s ease forwards;
+    opacity: 0;
+  }
+
+  .btn-primary {
+    background: var(--gold);
+    color: var(--ocean-deep);
+    padding: 16px 40px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: none;
+    cursor: none;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .btn-primary:hover {
+    background: var(--gold-light);
+    transform: translateY(-2px);
+  }
+  .btn-secondary {
+    color: var(--foam);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(200,232,245,0.3);
+    padding-bottom: 2px;
+    cursor: none;
+    transition: border-color 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--foam); }
+
+  /* Boat SVG illustration */
+  .hero-boat {
+    position: absolute;
+    right: -40px;
+    bottom: 200px;
+    width: 580px;
+    animation: boat-float 6s ease-in-out infinite, fade-right 1s 0.8s ease forwards;
+    opacity: 0;
+    filter: drop-shadow(0 20px 40px rgba(10, 110, 166, 0.3));
+  }
+  @keyframes boat-float {
+    0%, 100% { transform: translateY(0) rotate(-0.5deg); }
+    50% { transform: translateY(-15px) rotate(0.5deg); }
+  }
+
+  /* Hero stats strip */
+  .hero-stats {
+    position: absolute;
+    bottom: 320px;
+    right: 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    z-index: 10;
+    animation: fade-up 1s 1s ease forwards;
+    opacity: 0;
+  }
+  .stat-item {
+    text-align: right;
+  }
+  .stat-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-right {
+    from { opacity: 0; transform: translateX(60px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* SECTION COMMONS */
+  section { position: relative; }
+
+  .section-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-tag::before {
+    content: '';
+    width: 30px; height: 1px;
+    background: var(--gold);
+    opacity: 0.6;
+  }
+
+  /* PROBLEM SECTION */
+  .problem {
+    padding: 140px 60px;
+    background: linear-gradient(180deg, var(--ocean-deep) 0%, #030e1c 100%);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 100px;
+    align-items: center;
+  }
+
+  .problem-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(38px, 5vw, 60px);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 28px;
+  }
+  .problem-title .highlight {
+    color: var(--trash-accent);
+    font-style: italic;
+  }
+  .problem-body {
+    font-size: 19px;
+    font-weight: 300;
+    line-height: 1.8;
+    color: rgba(200,232,245,0.75);
+    margin-bottom: 48px;
+  }
+
+  .problem-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: rgba(200,232,245,0.05);
+    border: 1px solid rgba(200,232,245,0.06);
+  }
+  .prob-stat {
+    padding: 32px 28px;
+    background: rgba(4,30,54,0.6);
+    backdrop-filter: blur(8px);
+  }
+  .prob-stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px;
+    font-weight: 900;
+    color: var(--trash-accent);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .prob-stat-desc {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* Trash visual */
+  .trash-visual {
+    position: relative;
+    height: 480px;
+  }
+  .trash-ocean {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, #041e36 0%, #020b18 100%);
+    border: 1px solid rgba(200,232,245,0.05);
+    overflow: hidden;
+  }
+  .trash-item {
+    position: absolute;
+    border-radius: 2px;
+    opacity: 0.7;
+    animation: drift linear infinite;
+  }
+  @keyframes drift {
+    0% { transform: translateX(0) rotate(0deg); }
+    50% { transform: translateX(20px) rotate(180deg); }
+    100% { transform: translateX(0) rotate(360deg); }
+  }
+
+  /* HOW IT WORKS */
+  .how-it-works {
+    padding: 140px 60px;
+    background: var(--ocean-mid);
+    position: relative;
+    overflow: hidden;
+  }
+  .how-it-works::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--ocean-light), transparent);
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 100px;
+  }
+  .section-header .section-tag {
+    justify-content: center;
+  }
+  .section-header .section-tag::before { display: none; }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(40px, 5.5vw, 68px);
+    font-weight: 900;
+    line-height: 1.05;
+  }
+  .section-title em { font-style: italic; color: var(--foam); }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    background: rgba(200,232,245,0.04);
+    margin-top: 80px;
+  }
+  .step {
+    background: var(--ocean-mid);
+    padding: 56px 44px;
+    position: relative;
+    transition: background 0.3s;
+  }
+  .step:hover { background: rgba(10, 62, 107, 0.6); }
+
+  .step-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 80px;
+    font-weight: 900;
+    color: rgba(200,232,245,0.04);
+    position: absolute;
+    top: 20px;
+    right: 28px;
+    line-height: 1;
+    transition: color 0.3s;
+  }
+  .step:hover .step-number { color: rgba(200,169,110,0.08); }
+
+  .step-icon {
+    width: 56px; height: 56px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(200,169,110,0.2);
+  }
+
+  .step-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--white);
+  }
+  .step-body {
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.8;
+    color: rgba(200,232,245,0.65);
+  }
+
+  /* SPECS */
+  .specs {
+    padding: 140px 60px;
+    background: var(--ocean-deep);
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 120px;
+    align-items: start;
+  }
+
+  .specs-left .section-tag { margin-bottom: 24px; }
+  .specs-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(40px, 5vw, 60px);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 32px;
+  }
+  .specs-body {
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 1.9;
+    color: rgba(200,232,245,0.7);
+    margin-bottom: 48px;
+  }
+
+  .specs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: rgba(200,232,245,0.04);
+    border: 1px solid rgba(200,232,245,0.04);
+  }
+  .spec-item {
+    padding: 28px 24px;
+    background: var(--ocean-deep);
+    border-bottom: 1px solid rgba(200,232,245,0.05);
+    transition: background 0.3s;
+  }
+  .spec-item:hover { background: #041e36; }
+  .spec-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .spec-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .spec-unit {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: 4px;
+  }
+
+  /* Boat diagram side */
+  .boat-diagram {
+    position: sticky;
+    top: 120px;
+  }
+
+  /* IMPACT */
+  .impact {
+    padding: 140px 60px;
+    background: linear-gradient(180deg, var(--ocean-mid) 0%, var(--ocean-deep) 100%);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .impact::before {
+    content: 'RESTORE';
+    position: absolute;
+    font-family: 'Playfair Display', serif;
+    font-size: 240px;
+    font-weight: 900;
+    color: rgba(200,232,245,0.015);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .impact-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: rgba(200,232,245,0.06);
+    margin-top: 80px;
+    border: 1px solid rgba(200,232,245,0.05);
+  }
+  .metric {
+    padding: 60px 40px;
+    background: rgba(2,11,24,0.7);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+  .metric:hover { background: rgba(4,30,54,0.9); }
+  .metric-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 58px;
+    font-weight: 900;
+    color: var(--clean-green);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .metric-suffix {
+    font-size: 32px;
+    color: var(--gold);
+  }
+  .metric-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--foam);
+    margin-bottom: 10px;
+  }
+  .metric-desc {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+
+  /* TECHNOLOGY */
+  .technology {
+    padding: 140px 60px;
+    background: var(--ocean-deep);
+  }
+
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+    background: rgba(200,232,245,0.04);
+    margin-top: 80px;
+  }
+  .tech-card {
+    background: var(--ocean-deep);
+    padding: 60px 56px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.4s;
+  }
+  .tech-card:hover { background: #041526; }
+  .tech-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--ocean-light), var(--gold));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+  .tech-card:hover::after { transform: scaleX(1); }
+
+  .tech-card-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+  }
+  .tech-card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    line-height: 1.2;
+  }
+  .tech-card-body {
+    font-size: 17px;
+    font-weight: 300;
+    line-height: 1.9;
+    color: rgba(200,232,245,0.65);
+  }
+
+  /* CTA SECTION */
+  .cta-section {
+    padding: 180px 60px;
+    background: var(--ocean-mid);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px; height: 800px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(10,110,166,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cta-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(48px, 7vw, 90px);
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 32px;
+    position: relative;
+  }
+  .cta-title em { font-style: italic; color: var(--gold); }
+  .cta-sub {
+    font-size: 20px;
+    font-weight: 300;
+    color: rgba(200,232,245,0.65);
+    max-width: 520px;
+    margin: 0 auto 56px;
+    line-height: 1.7;
+  }
+  .cta-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* FOOTER */
+  footer {
+    padding: 60px;
+    background: var(--ocean-deep);
+    border-top: 1px solid rgba(200,232,245,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .footer-tagline {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .footer-links {
+    display: flex;
+    gap: 36px;
+    list-style: none;
+  }
+  .footer-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--foam); }
+
+  /* Scroll reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-4 { transition-delay: 0.4s; }
+
+  /* Responsive tweaks */
+  @media (max-width: 900px) {
+    nav { padding: 20px 24px; }
+    .nav-links { display: none; }
+    .hero-content { padding: 0 24px; }
+    .hero-boat { display: none; }
+    .hero-stats { display: none; }
+    .problem, .specs { grid-template-columns: 1fr; gap: 60px; padding: 80px 24px; }
+    .how-it-works, .impact, .technology, .cta-section { padding: 80px 24px; }
+    footer { padding: 40px 24px; flex-direction: column; gap: 24px; text-align: center; }
+    .steps, .tech-grid { grid-template-columns: 1fr; }
+    .impact-metrics { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">AquaSweep</a>
+  <ul class="nav-links">
+    <li><a href="#how-it-works">How It Works</a></li>
+    <li><a href="#specs">Vessel</a></li>
+    <li><a href="#impact">Impact</a></li>
+    <li><a href="#technology">Technology</a></li>
+    <li><a href="#contact">Order</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="ocean-bg"></div>
+
+  <!-- Particles -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Waves -->
+  <div class="waves-container">
+    <div class="wave wave-1">
+      <svg viewBox="0 0 1440 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,100 C240,160 480,40 720,100 C960,160 1200,40 1440,100 L1440,200 L0,200 Z" fill="rgba(7,61,107,0.5)"/>
+      </svg>
+    </div>
+    <div class="wave wave-2">
+      <svg viewBox="0 0 1440 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,80 C360,140 600,20 900,90 C1080,130 1260,60 1440,80 L1440,200 L0,200 Z" fill="rgba(10,62,107,0.3)"/>
+      </svg>
+    </div>
+    <div class="wave wave-3">
+      <svg viewBox="0 0 1440 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,120 C200,80 400,160 720,120 C900,100 1200,150 1440,120 L1440,200 L0,200 Z" fill="rgba(4,30,54,0.6)"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-tag">Ocean Restoration Technology</div>
+    <h1 class="hero-title">
+      <span class="title-accent">AquaSweep</span>
+      <em>cleans what<br>we left behind.</em>
+    </h1>
+    <p class="hero-subtitle">
+      An autonomous surface vessel engineered to collect floating debris, microplastics, and ocean waste — restoring water ecosystems at industrial scale.
+    </p>
+    <div class="hero-ctas">
+      <a class="btn-primary" href="#how-it-works">See How It Works</a>
+      <a class="btn-secondary" href="#specs">View Specifications →</a>
+    </div>
+  </div>
+
+  <!-- Boat SVG -->
+  <div class="hero-boat">
+    <svg viewBox="0 0 560 320" xmlns="http://www.w3.org/2000/svg">
+      <!-- Ocean surface ripples -->
+      <ellipse cx="280" cy="270" rx="260" ry="18" fill="rgba(7,61,107,0.4)"/>
+      <ellipse cx="280" cy="275" rx="220" ry="12" fill="rgba(4,30,54,0.5)"/>
+
+      <!-- Hull shadow -->
+      <ellipse cx="280" cy="264" rx="200" ry="14" fill="rgba(0,0,0,0.3)"/>
+
+      <!-- Boat hull -->
+      <path d="M80 240 Q280 285 480 240 L460 200 Q280 230 100 200 Z" fill="#0a2845"/>
+      <path d="M80 240 Q280 285 480 240 L460 220 Q280 255 100 220 Z" fill="#0d3460"/>
+      <!-- Hull stripe -->
+      <path d="M95 222 Q280 248 465 222" stroke="rgba(200,169,110,0.5)" stroke-width="2" fill="none"/>
+
+      <!-- Main body/deck -->
+      <rect x="110" y="160" width="340" height="60" rx="6" fill="#0a2845"/>
+      <rect x="110" y="155" width="340" height="12" rx="3" fill="#0d3460"/>
+
+      <!-- Collection net housing (front) -->
+      <path d="M80 180 L110 160 L110 220 L80 240 Z" fill="#062236"/>
+      <!-- Net opening indicator -->
+      <path d="M82 185 L108 167" stroke="rgba(200,169,110,0.6)" stroke-width="1.5" fill="none" stroke-dasharray="4,3"/>
+      <path d="M82 195 L108 177" stroke="rgba(200,169,110,0.6)" stroke-width="1.5" fill="none" stroke-dasharray="4,3"/>
+      <path d="M82 205 L108 188" stroke="rgba(200,169,110,0.6)" stroke-width="1.5" fill="none" stroke-dasharray="4,3"/>
+      <path d="M82 215 L108 200" stroke="rgba(200,169,110,0.6)" stroke-width="1.5" fill="none" stroke-dasharray="4,3"/>
+
+      <!-- Superstructure -->
+      <rect x="180" y="110" width="200" height="52" rx="6" fill="#0d3460"/>
+      <rect x="180" y="107" width="200" height="8" rx="3" fill="#123d77"/>
+
+      <!-- Bridge windows -->
+      <rect x="195" y="120" width="40" height="30" rx="3" fill="rgba(10,110,166,0.3)" stroke="rgba(200,232,245,0.2)" stroke-width="1"/>
+      <rect x="250" y="120" width="40" height="30" rx="3" fill="rgba(10,110,166,0.4)" stroke="rgba(200,232,245,0.2)" stroke-width="1"/>
+      <rect x="305" y="120" width="40" height="30" rx="3" fill="rgba(10,110,166,0.3)" stroke="rgba(200,232,245,0.2)" stroke-width="1"/>
+      <!-- Window glow -->
+      <rect x="195" y="120" width="40" height="30" rx="3" fill="rgba(10,110,200,0.15)"/>
+      <rect x="250" y="120" width="40" height="30" rx="3" fill="rgba(10,110,200,0.2)"/>
+
+      <!-- Mast -->
+      <line x1="280" y1="40" x2="280" y2="112" stroke="#0d3460" stroke-width="3"/>
+      <line x1="280" y1="60" x2="220" y2="85" stroke="#0d3460" stroke-width="1.5"/>
+      <line x1="280" y1="60" x2="340" y2="85" stroke="#0d3460" stroke-width="1.5"/>
+      <!-- Antenna/sensor -->
+      <circle cx="280" cy="38" r="4" fill="var(--gold)" opacity="0.8"/>
+      <circle cx="280" cy="38" r="8" fill="none" stroke="rgba(200,169,110,0.3)" stroke-width="1"/>
+
+      <!-- Solar panels on deck -->
+      <rect x="130" y="162" width="45" height="20" rx="2" fill="#041e36" stroke="rgba(10,110,166,0.4)" stroke-width="1"/>
+      <line x1="145" y1="162" x2="145" y2="182" stroke="rgba(10,110,166,0.3)" stroke-width="0.5"/>
+      <line x1="160" y1="162" x2="160" y2="182" stroke="rgba(10,110,166,0.3)" stroke-width="0.5"/>
+      <line x1="130" y1="169" x2="175" y2="169" stroke="rgba(10,110,166,0.3)" stroke-width="0.5"/>
+      <line x1="130" y1="174" x2="175" y2="174" stroke="rgba(10,110,166,0.3)" stroke-width="0.5"/>
+
+      <rect x="385" y="162" width="45" height="20" rx="2" fill="#041e36" stroke="rgba(10,110,166,0.4)" stroke-width="1"/>
+      <line x1="400" y1="162" x2="400" y2="182" stroke="rgba(10,110,166,0.3)" stroke-width="0.5"/>
+      <line x1="415" y1="162" x2="415" y2="182" stroke="rgba(10,110,166,0.3)" stroke-width="0.5"/>
+      <line x1="385" y1="169" x2="430" y2="169" stroke="rgba(10,110,166,0.3)" stroke-width="0.5"/>
+      <line x1="385" y1="174" x2="430" y2="174" stroke="rgba(10,110,166,0.3)" stroke-width="0.5"/>
+
+      <!-- Trash storage bay indicator -->
+      <rect x="350" y="165" width="30" height="14" rx="2" fill="rgba(224,90,43,0.15)" stroke="rgba(224,90,43,0.3)" stroke-width="1"/>
+      <text x="365" y="175" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(224,90,43,0.7)">FULL</text>
+
+      <!-- Green running lights -->
+      <circle cx="480" cy="230" r="4" fill="rgba(46,204,113,0.7)"/>
+      <circle cx="82" cy="230" r="4" fill="rgba(224,90,43,0.7)"/>
+
+      <!-- Water churning at bow -->
+      <path d="M62 240 Q68 230 76 240 Q68 250 62 240" fill="rgba(200,232,245,0.3)"/>
+      <path d="M55 248 Q62 238 70 248 Q62 258 55 248" fill="rgba(200,232,245,0.2)"/>
+
+      <!-- Trash items in water being collected -->
+      <g opacity="0.6">
+        <rect x="30" y="248" width="12" height="6" rx="1" fill="#e05a2b" transform="rotate(-15, 36, 251)"/>
+        <circle cx="50" cy="260" r="4" fill="rgba(200,232,245,0.3)" stroke="rgba(200,232,245,0.5)" stroke-width="1"/>
+        <rect x="20" y="258" width="8" height="4" rx="1" fill="#4a9eff" opacity="0.5"/>
+        <path d="M40 268 Q46 263 52 268" stroke="rgba(200,232,245,0.4)" stroke-width="1.5" fill="none"/>
+      </g>
+
+      <!-- Wake lines -->
+      <path d="M480 248 Q510 240 540 248 Q510 256 480 248" fill="rgba(200,232,245,0.12)"/>
+      <path d="M490 258 Q520 250 550 258 Q520 266 490 258" fill="rgba(200,232,245,0.08)"/>
+    </svg>
+  </div>
+
+  <!-- Stats -->
+  <div class="hero-stats">
+    <div class="stat-item">
+      <div class="stat-number">2.4T</div>
+      <div class="stat-label">Pieces in our oceans</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">800+</div>
+      <div class="stat-label">Species affected</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">0</div>
+      <div class="stat-label">Emissions while running</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="problem">
+  <div>
+    <div class="section-tag reveal">The Problem</div>
+    <h2 class="problem-title reveal reveal-delay-1">
+      Our oceans are drowning in <span class="highlight">our waste.</span>
+    </h2>
+    <p class="problem-body reveal reveal-delay-2">
+      Every year, 8 million metric tons of plastic enter the ocean. Conventional cleanup efforts are too slow, too costly, and too small-scale to reverse the tide. We built AquaSweep to change that equation.
+    </p>
+    <div class="problem-stats reveal reveal-delay-3">
+      <div class="prob-stat">
+        <div class="prob-stat-num">8M</div>
+        <div class="prob-stat-desc">Metric tons of plastic enter oceans annually</div>
+      </div>
+      <div class="prob-stat">
+        <div class="prob-stat-num">269K</div>
+        <div class="prob-stat-desc">Tons floating on the surface right now</div>
+      </div>
+      <div class="prob-stat">
+        <div class="prob-stat-num">5</div>
+        <div class="prob-stat-desc">Major garbage patches mapped worldwide</div>
+      </div>
+      <div class="prob-stat">
+        <div class="prob-stat-num">50×</div>
+        <div class="prob-stat-desc">AquaSweep's speed vs. traditional methods</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trash ocean visual -->
+  <div class="trash-visual reveal reveal-delay-2">
+    <div class="trash-ocean" id="trash-ocean">
+      <svg width="100%" height="100%" viewBox="0 0 460 480" xmlns="http://www.w3.org/2000/svg">
+        <!-- Water background -->
+        <defs>
+          <radialGradient id="waterGrad" cx="50%" cy="60%" r="60%">
+            <stop offset="0%" stop-color="#041e36"/>
+            <stop offset="100%" stop-color="#020b18"/>
+          </radialGradient>
+          <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(10,110,166,0.15)"/>
+            <stop offset="100%" stop-color="transparent"/>
+          </radialGradient>
+        </defs>
+        <rect width="460" height="480" fill="url(#waterGrad)"/>
+        <ellipse cx="230" cy="300" rx="250" ry="200" fill="url(#glowGrad)"/>
+
+        <!-- Water ripple lines -->
+        <g opacity="0.12" stroke="rgba(200,232,245,1)" fill="none">
+          <path d="M20 100 Q115 85 230 100 Q345 115 440 100"/>
+          <path d="M20 140 Q115 125 230 140 Q345 155 440 140"/>
+          <path d="M20 180 Q115 165 230 180 Q345 195 440 180"/>
+          <path d="M20 220 Q115 205 230 220 Q345 235 440 220"/>
+          <path d="M20 260 Q115 245 230 260 Q345 275 440 260"/>
+          <path d="M20 300 Q115 285 230 300 Q345 315 440 300"/>
+          <path d="M20 340 Q115 325 230 340 Q345 355 440 340"/>
+          <path d="M20 380 Q115 365 230 380 Q345 395 440 380"/>
+          <path d="M20 420 Q115 405 230 420 Q345 435 440 420"/>
+          <path d="M20 460 Q115 445 230 460 Q345 475 440 460"/>
+        </g>
+
+        <!-- Scattered debris -->
+        <!-- Bottles -->
+        <g opacity="0.75">
+          <rect x="40" y="80" width="18" height="8" rx="3" fill="#4a9eff" transform="rotate(-20,49,84)"/>
+          <rect x="120" y="140" width="22" height="9" rx="3" fill="#88ccff" transform="rotate(15,131,144)"/>
+          <rect x="200" y="60" width="16" height="7" rx="3" fill="#4a9eff" transform="rotate(-5,208,63)"/>
+          <rect x="310" y="120" width="20" height="8" rx="3" fill="#99ddff" transform="rotate(25,320,124)"/>
+          <rect x="390" y="180" width="18" height="8" rx="3" fill="#4a9eff" transform="rotate(-10,399,184)"/>
+          <rect x="70" y="260" width="22" height="8" rx="3" fill="#88ccff" transform="rotate(30,81,264)"/>
+          <rect x="350" y="300" width="16" height="7" rx="3" fill="#4a9eff" transform="rotate(-15,358,303)"/>
+          <rect x="170" y="360" width="20" height="8" rx="3" fill="#99ddff" transform="rotate(10,180,364)"/>
+          <rect x="260" y="420" width="18" height="8" rx="3" fill="#4a9eff" transform="rotate(-25,269,424)"/>
+          <rect x="410" y="400" width="22" height="9" rx="3" fill="#88ccff" transform="rotate(20,421,404)"/>
+        </g>
+
+        <!-- Bags -->
+        <g opacity="0.6">
+          <path d="M80 200 Q100 190 115 210 Q100 225 80 200" fill="rgba(200,232,245,0.3)" stroke="rgba(200,232,245,0.2)" stroke-width="0.5"/>
+          <path d="M240 160 Q265 148 278 170 Q265 185 240 160" fill="rgba(200,232,245,0.25)" stroke="rgba(200,232,245,0.15)" stroke-width="0.5"/>
+          <path d="M330 240 Q358 228 373 252 Q358 268 330 240" fill="rgba(200,232,245,0.3)" stroke="rgba(200,232,245,0.2)" stroke-width="0.5"/>
+          <path d="M50 340 Q75 328 88 350 Q75 365 50 340" fill="rgba(200,232,245,0.2)" stroke="rgba(200,232,245,0.1)" stroke-width="0.5"/>
+          <path d="M200 280 Q228 268 242 290 Q228 306 200 280" fill="rgba(200,232,245,0.28)" stroke="rgba(200,232,245,0.2)" stroke-width="0.5"/>
+        </g>
+
+        <!-- Red cups / containers -->
+        <g opacity="0.8">
+          <path d="M160 100 L168 100 L165 116 L163 116 Z" fill="#e05a2b"/>
+          <path d="M280 200 L289 200 L286 218 L283 218 Z" fill="#c0392b"/>
+          <path d="M420 140 L429 140 L426 156 L423 156 Z" fill="#e05a2b"/>
+          <path d="M100 300 L108 300 L105 316 L103 316 Z" fill="#c0392b"/>
+          <path d="M370 380 L378 380 L375 396 L373 396 Z" fill="#e05a2b"/>
+          <path d="M230 440 L239 440 L236 456 L233 456 Z" fill="#c0392b"/>
+        </g>
+
+        <!-- Microplastics dots -->
+        <g fill="rgba(200,232,245,0.4)">
+          <circle cx="35" cy="150" r="2.5"/>
+          <circle cx="65" cy="400" r="2"/>
+          <circle cx="145" cy="320" r="3"/>
+          <circle cx="180" cy="220" r="2"/>
+          <circle cx="215" cy="340" r="2.5"/>
+          <circle cx="250" cy="460" r="2"/>
+          <circle cx="295" cy="160" r="3"/>
+          <circle cx="330" cy="440" r="2.5"/>
+          <circle cx="400" cy="220" r="2"/>
+          <circle cx="440" cy="350" r="3"/>
+          <circle cx="55" cy="440" r="2"/>
+          <circle cx="130" cy="200" r="2.5"/>
+          <circle cx="340" cy="360" r="2"/>
+          <circle cx="445" cy="460" r="2.5"/>
+        </g>
+
+        <!-- Label overlay -->
+        <rect x="0" y="0" width="460" height="480" fill="linear-gradient(to bottom, transparent 60%, rgba(2,11,24,0.7) 100%)"/>
+        <text x="230" y="455" text-anchor="middle" font-family="'DM Mono', monospace" font-size="10" letter-spacing="3" fill="rgba(200,90,43,0.6)">SIMULATED OCEAN SURFACE</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-it-works" id="how-it-works">
+  <div class="section-header">
+    <div class="section-tag reveal">The Solution</div>
+    <h2 class="section-title reveal reveal-delay-1">
+      Engineered to <em>collect,<br>not just observe.</em>
+    </h2>
+  </div>
+
+  <div class="steps">
+    <div class="step reveal">
+      <div class="step-number">01</div>
+      <div class="step-icon">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="14" cy="14" r="6" stroke="var(--gold)" stroke-width="1.5"/>
+          <path d="M14 2 L14 6 M14 22 L14 26 M2 14 L6 14 M22 14 L26 14" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="14" cy="14" r="2" fill="var(--gold)"/>
+        </svg>
+      </div>
+      <h3 class="step-title">AI-Guided Navigation</h3>
+      <p class="step-body">AquaSweep's onboard computer system uses satellite imagery and real-time sensors to map debris concentrations and autonomously navigate to the highest-density zones. No human operator required.</p>
+    </div>
+    <div class="step reveal reveal-delay-1">
+      <div class="step-number">02</div>
+      <div class="step-icon">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 20 L6 14 L14 18 L22 10 L26 16" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 22 Q14 26 24 22" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M2 22 L4 18 L4 22 Z" fill="var(--gold)"/>
+          <path d="M26 22 L24 18 L24 22 Z" fill="var(--gold)"/>
+        </svg>
+      </div>
+      <h3 class="step-title">Surface Veil Collection</h3>
+      <p class="step-body">A wide-mouth passive intake system — the "veil" — spans up to 8 meters at the bow. As the vessel moves, water flows through fine mesh screens that trap debris from macro-plastic down to 0.3mm particles.</p>
+    </div>
+    <div class="step reveal reveal-delay-2">
+      <div class="step-number">03</div>
+      <div class="step-icon">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="6" y="12" width="16" height="12" rx="2" stroke="var(--gold)" stroke-width="1.5"/>
+          <path d="M10 12 L10 8 Q14 4 18 8 L18 12" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M11 18 L17 18 M14 15 L14 21" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h3 class="step-title">Onboard Sorting & Compression</h3>
+      <p class="step-body">Collected material is conveyed into an automated sorting chamber where AI vision identifies material types. Plastics are compacted into dense bales. Organic matter is separated for safe return to the water.</p>
+    </div>
+    <div class="step reveal reveal-delay-1">
+      <div class="step-number">04</div>
+      <div class="step-icon">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 4 L14 24 M6 12 L14 4 L22 12" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 20 Q14 24 20 20" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h3 class="step-title">Zero-Emission Propulsion</h3>
+      <p class="step-body">Solar panels across the deck and a hydrogen fuel cell backup system power the vessel entirely without combustion emissions. AquaSweep cleans the ocean without adding to the pollution chain.</p>
+    </div>
+    <div class="step reveal reveal-delay-2">
+      <div class="step-number">05</div>
+      <div class="step-icon">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="14" cy="14" r="10" stroke="var(--gold)" stroke-width="1.5"/>
+          <path d="M14 4 Q18 14 14 24 Q10 14 14 4" stroke="var(--gold)" stroke-width="1"/>
+          <path d="M4 14 Q14 18 24 14 Q14 10 4 14" stroke="var(--gold)" stroke-width="1"/>
+        </svg>
+      </div>
+      <h3 class="step-title">Continuous Deployment</h3>
+      <p class="step-body">Fleet-managed via cloud dashboard. Vessels operate in coordinated sweeps, uploading real-time data on waste collected, GPS position, and ocean health metrics to our global monitoring platform.</p>
+    </div>
+    <div class="step reveal reveal-delay-3">
+      <div class="step-number">06</div>
+      <div class="step-icon">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 20 L20 8 M12 8 L20 8 L20 16" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="14" cy="14" r="11" stroke="var(--gold)" stroke-width="1" stroke-dasharray="3,4"/>
+        </svg>
+      </div>
+      <h3 class="step-title">Port Offloading & Recycling</h3>
+      <p class="step-body">When storage reaches capacity, AquaSweep autonomously returns to designated port facilities where compacted material is offloaded and transferred directly to certified plastic recycling or upcycling partners.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SPECS -->
+<section class="specs" id="specs">
+  <div class="specs-left">
+    <div class="section-tag reveal">Vessel Specifications</div>
+    <h2 class="specs-title reveal reveal-delay-1">
+      Built for<br>the open sea.
+    </h2>
+    <p class="specs-body reveal reveal-delay-2">
+      AquaSweep MK-II is a purpose-built, fully autonomous catamaran hull — wide and stable enough to weather rough conditions while maintaining collection efficiency around the clock.
+    </p>
+    <div class="specs-grid reveal reveal-delay-3">
+      <div class="spec-item">
+        <div class="spec-label">Length Overall</div>
+        <div class="spec-value">12.4<span class="spec-unit">m</span></div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-label">Beam Width</div>
+        <div class="spec-value">6.8<span class="spec-unit">m</span></div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-label">Collection Width</div>
+        <div class="spec-value">8<span class="spec-unit">m</span></div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-label">Operational Speed</div>
+        <div class="spec-value">3.5<span class="spec-unit">kn</span></div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-label">Storage Capacity</div>
+        <div class="spec-value">4.2<span class="spec-unit">t</span></div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-label">Solar Array</div>
+        <div class="spec-value">24<span class="spec-unit">kWp</span></div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-label">Autonomy Range</div>
+        <div class="spec-value">2,400<span class="spec-unit">nm</span></div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-label">Min. Particle Size</div>
+        <div class="spec-value">0.3<span class="spec-unit">mm</span></div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-label">Daily Collection</div>
+        <div class="spec-value">1.8<span class="spec-unit">t</span></div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-label">Emissions</div>
+        <div class="spec-value" style="color: var(--clean-green)">Zero</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed boat diagram -->
+  <div class="boat-diagram reveal reveal-delay-2">
+    <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" width="100%">
+      <defs>
+        <radialGradient id="diagGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(10,110,166,0.08)"/>
+          <stop offset="100%" stop-color="transparent"/>
+        </radialGradient>
+        <marker id="arrowhead" markerWidth="6" markerHeight="4" refX="3" refY="2" orient="auto">
+          <polygon points="0 0, 6 2, 0 4" fill="rgba(200,169,110,0.6)"/>
+        </marker>
+      </defs>
+
+      <rect width="500" height="500" fill="url(#diagGlow)"/>
+
+      <!-- Top View -->
+      <text x="250" y="28" text-anchor="middle" font-family="'DM Mono', monospace" font-size="10" fill="rgba(200,169,110,0.6)" letter-spacing="3">TOP VIEW — AquaSweep MK-II</text>
+
+      <!-- Catamaran twin hulls -->
+      <rect x="80" y="80" width="60" height="320" rx="30" fill="#0a2845" stroke="rgba(200,232,245,0.1)" stroke-width="1"/>
+      <rect x="360" y="80" width="60" height="320" rx="30" fill="#0a2845" stroke="rgba(200,232,245,0.1)" stroke-width="1"/>
+
+      <!-- Cross beams -->
+      <rect x="80" y="130" width="340" height="16" rx="4" fill="#0d3460"/>
+      <rect x="80" y="220" width="340" height="16" rx="4" fill="#0d3460"/>
+      <rect x="80" y="310" width="340" height="16" rx="4" fill="#0d3460"/>
+
+      <!-- Main deck / hull connection -->
+      <rect x="140" y="90" width="220" height="300" rx="6" fill="#041e36" stroke="rgba(200,232,245,0.06)" stroke-width="1"/>
+
+      <!-- Solar array top -->
+      <g opacity="0.8">
+        <rect x="155" y="105" width="90" height="60" rx="3" fill="#041e36" stroke="rgba(10,110,166,0.5)" stroke-width="1"/>
+        <line x1="185" y1="105" x2="185" y2="165" stroke="rgba(10,110,166,0.3)" stroke-width="0.8"/>
+        <line x1="215" y1="105" x2="215" y2="165" stroke="rgba(10,110,166,0.3)" stroke-width="0.8"/>
+        <line x1="155" y1="125" x2="245" y2="125" stroke="rgba(10,110,166,0.3)" stroke-width="0.8"/>
+        <line x1="155" y1="145" x2="245" y2="145" stroke="rgba(10,110,166,0.3)" stroke-width="0.8"/>
+
+        <rect x="255" y="105" width="90" height="60" rx="3" fill="#041e36" stroke="rgba(10,110,166,0.5)" stroke-width="1"/>
+        <line x1="285" y1="105" x2="285" y2="165" stroke="rgba(10,110,166,0.3)" stroke-width="0.8"/>
+        <line x1="315" y1="105" x2="315" y2="165" stroke="rgba(10,110,166,0.3)" stroke-width="0.8"/>
+        <line x1="255" y1="125" x2="345" y2="125" stroke="rgba(10,110,166,0.3)" stroke-width="0.8"/>
+        <line x1="255" y1="145" x2="345" y2="145" stroke="rgba(10,110,166,0.3)" stroke-width="0.8"/>
+      </g>
+
+      <!-- Bridge/nav center -->
+      <rect x="190" y="185" width="120" height="80" rx="4" fill="#0d3460" stroke="rgba(200,232,245,0.12)" stroke-width="1"/>
+      <circle cx="250" cy="225" r="16" fill="none" stroke="rgba(10,110,166,0.6)" stroke-width="1"/>
+      <circle cx="250" cy="225" r="6" fill="rgba(10,110,166,0.4)"/>
+
+      <!-- Storage bay -->
+      <rect x="175" y="290" width="150" height="80" rx="4" fill="#062236" stroke="rgba(224,90,43,0.2)" stroke-width="1"/>
+      <text x="250" y="336" text-anchor="middle" font-family="'DM Mono', monospace" font-size="9" fill="rgba(224,90,43,0.6)" letter-spacing="1">STORAGE BAY</text>
+
+      <!-- Collection net zone (bow / top) -->
+      <path d="M140 80 L80 50 L420 50 L360 80 Z" fill="rgba(10,110,166,0.1)" stroke="rgba(200,169,110,0.3)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="250" y="70" text-anchor="middle" font-family="'DM Mono', monospace" font-size="9" fill="rgba(200,169,110,0.7)" letter-spacing="2">COLLECTION VEIL</text>
+
+      <!-- Annotation arrows -->
+      <!-- Solar -->
+      <line x1="245" y1="135" x2="245" y2="460" stroke="rgba(200,169,110,0.15)" stroke-width="1" stroke-dasharray="2,4"/>
+      <line x1="155" y1="460" x2="420" y2="460" stroke="rgba(200,169,110,0.15)" stroke-width="1"/>
+
+      <!-- Dimension indicators -->
+      <line x1="60" y1="80" x2="60" y2="400" stroke="rgba(200,169,110,0.3)" stroke-width="1" marker-end="url(#arrowhead)"/>
+      <line x1="60" y1="80" x2="60" y2="400" stroke="rgba(200,169,110,0.3)" stroke-width="1" marker-start="url(#arrowhead)"/>
+      <text x="40" y="245" text-anchor="middle" font-family="'DM Mono', monospace" font-size="9" fill="rgba(200,169,110,0.7)" transform="rotate(-90, 40, 245)">12.4m LOA</text>
+
+      <line x1="80" y1="430" x2="420" y2="430" stroke="rgba(200,169,110,0.3)" stroke-width="1" marker-end="url(#arrowhead)" marker-start="url(#arrowhead)"/>
+      <text x="250" y="448" text-anchor="middle" font-family="'DM Mono', monospace" font-size="9" fill="rgba(200,169,110,0.7)">6.8m BEAM</text>
+
+      <!-- Collection width -->
+      <line x1="80" y1="480" x2="420" y2="480" stroke="rgba(10,110,166,0.4)" stroke-width="1" marker-end="url(#arrowhead)" marker-start="url(#arrowhead)"/>
+      <text x="250" y="496" text-anchor="middle" font-family="'DM Mono', monospace" font-size="9" fill="rgba(10,110,166,0.7)">8.0m COLLECTION WIDTH</text>
+
+      <!-- Labels -->
+      <text x="110" y="246" text-anchor="middle" font-family="'DM Mono', monospace" font-size="8" fill="rgba(200,232,245,0.4)" letter-spacing="1">PORT</text>
+      <text x="390" y="246" text-anchor="middle" font-family="'DM Mono', monospace" font-size="8" fill="rgba(200,232,245,0.4)" letter-spacing="1">STBD</text>
+    </svg>
+  </div>
+</section>
+
+<!-- IMPACT METRICS -->
+<section class="impact" id="impact">
+  <div class="section-header">
+    <div class="section-tag reveal">Real Impact</div>
+    <h2 class="section-title reveal reveal-delay-1">
+      Numbers that<br><em>move the needle.</em>
+    </h2>
+  </div>
+
+  <div class="impact-metrics reveal reveal-delay-2">
+    <div class="metric">
+      <div class="metric-title">Plastic Removed</div>
+      <div class="metric-number">640<span class="metric-suffix">t</span></div>
+      <div class="metric-desc">Collected by our pilot fleet in 18 months of operation across the Pacific.</div>
+    </div>
+    <div class="metric">
+      <div class="metric-number">99<span class="metric-suffix">%</span></div>
+      <div class="metric-title">Recycling Rate</div>
+      <div class="metric-desc">Of sorted material redirected to certified partners — nearly zero landfill.</div>
+    </div>
+    <div class="metric">
+      <div class="metric-number">24<span class="metric-suffix">/7</span></div>
+      <div class="metric-title">Operational Hours</div>
+      <div class="metric-desc">Autonomous systems work around the clock, every day, regardless of weather.</div>
+    </div>
+    <div class="metric">
+      <div class="metric-number">0<span class="metric-suffix">g</span></div>
+      <div class="metric-title">CO₂ Emitted</div>
+      <div class="metric-desc">Fully solar and hydrogen powered — the cleanup adds zero carbon to the atmosphere.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TECHNOLOGY -->
+<section class="technology" id="technology">
+  <div class="section-header">
+    <div class="section-tag reveal">Core Technology</div>
+    <h2 class="section-title reveal reveal-delay-1">
+      Four systems.<br><em>One mission.</em>
+    </h2>
+  </div>
+
+  <div class="tech-grid">
+    <div class="tech-card reveal">
+      <div class="tech-card-label">System 01 — Veil Array</div>
+      <h3 class="tech-card-title">The Surface Veil</h3>
+      <p class="tech-card-body">A patented passive-flow collection net system engineered from ultra-fine HDPE mesh stretched across a carbon fiber boom. The veil is deployed at the bow, angled into the current. As water passes through, debris is captured and conveyed aft via a low-energy belt system. Marine organisms are protected by biocompatible mesh pores and current-avoidance sensors.</p>
+    </div>
+    <div class="tech-card reveal reveal-delay-1">
+      <div class="tech-card-label">System 02 — NeuralSweep AI</div>
+      <h3 class="tech-card-title">Intelligent Navigation</h3>
+      <p class="tech-card-body">NeuralSweep is our proprietary onboard AI that fuses satellite ocean-surface data, lidar point clouds, and hull-mounted radar to build live debris density maps. The system plans optimal collection routes, dynamically avoids marine wildlife, coordinates with other fleet vessels to prevent redundant sweeping, and uploads hourly telemetry to shore operations.</p>
+    </div>
+    <div class="tech-card reveal reveal-delay-1">
+      <div class="tech-card-label">System 03 — SortCore</div>
+      <h3 class="tech-card-title">Onboard Sorting Engine</h3>
+      <p class="tech-card-body">Collected material drops onto a conveyor beneath a computer-vision scanner trained to identify over 80 material types: PET bottles, HDPE packaging, fishing line, foam, metal, and more. Organic matter (seaweed, fish, shells) is identified and safely returned overboard via a bypass chute. Plastics are segregated by polymer type and compressed into 40kg bales.</p>
+    </div>
+    <div class="tech-card reveal reveal-delay-2">
+      <div class="tech-card-label">System 04 — ZeroTrace Drive</div>
+      <h3 class="tech-card-title">Emissions-Free Propulsion</h3>
+      <p class="tech-card-body">AquaSweep's propulsion system pairs a 24 kWp flexible solar array laminated to the deck with a 40 kWh lithium-iron-phosphate battery bank and a hydrogen fuel cell as a deep reserve. Dual azimuth thrusters provide precise maneuvering. The vessel generates more energy than it consumes on average, leaving a net positive energy balance over a full deployment cycle.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <h2 class="cta-title reveal">
+    Ready to deploy<br><em>your fleet?</em>
+  </h2>
+  <p class="cta-sub reveal reveal-delay-1">
+    Whether you're a government agency, research institution, or corporate sustainability partner — AquaSweep is ready for deployment. Join the cleanup.
+  </p>
+  <div class="cta-buttons reveal reveal-delay-2">
+    <a class="btn-primary" href="#">Request a Demo</a>
+    <a class="btn-secondary" href="#">Download Spec Sheet →</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-logo">AquaSweep</div>
+    <div class="footer-tagline">Ocean Restoration Technology — Est. 2022</div>
+  </div>
+  <ul class="footer-links">
+    <li><a href="#">Technology</a></li>
+    <li><a href="#">Impact</a></li>
+    <li><a href="#">Partners</a></li>
+    <li><a href="#">Careers</a></li>
+    <li><a href="#">Press</a></li>
+  </ul>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursor-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function animCursor() {
+    cursor.style.left = mx + 'px';
+    cursor.style.top = my + 'px';
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+    requestAnimationFrame(animCursor);
+  }
+  animCursor();
+
+  // Particles
+  const particlesContainer = document.getElementById('particles');
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `
+      left: ${Math.random() * 100}%;
+      width: ${Math.random() * 3 + 1}px;
+      height: ${Math.random() * 3 + 1}px;
+      animation-duration: ${Math.random() * 12 + 8}s;
+      animation-delay: ${Math.random() * 10}s;
+      opacity: 0;
+    `;
+    particlesContainer.appendChild(p);
+  }
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(r => observer.observe(r));
+</script>
+</body>
+</html>
