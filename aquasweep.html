@@ -2173,7 +2173,23 @@
   </p>
   <div class="cta-buttons reveal reveal-delay-2">
     <a class="btn-primary" href="mailto:info.aquasweep@gmail.com">Request a Demo</a>
-    <a class="btn-secondary" href="#">Download Spec Sheet →</a>
+    <a class="btn-secondary" onclick="downloadPDF(event)">Download Spec Sheet →</a>
+
+    <script>
+    function downloadPDF(e) {
+      e.preventDefault();
+      fetch('https://cdn.jsdelivr.net/gh/Sbedair/aquasweep@main/Aquasweep.pdf')
+        .then(res => res.blob())
+        .then(blob => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'AquaSweep_SpecSheet.pdf';
+          a.click();
+          URL.revokeObjectURL(a.href);
+        });
+    }
+    </script>
+
   </div>
 </section>
 
