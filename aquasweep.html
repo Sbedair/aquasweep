@@ -2142,24 +2142,24 @@
 
   <div class="tech-grid">
     <div class="tech-card reveal">
-      <div class="tech-card-label">System 01 — Veil Array</div>
-      <h3 class="tech-card-title">The Surface Veil</h3>
-      <p class="tech-card-body">A patented passive-flow collection net system engineered from ultra-fine HDPE mesh stretched across a carbon fiber boom. The veil is deployed at the bow, angled into the current. As water passes through, debris is captured and conveyed aft via a low-energy belt system. Freshwater organisms are protected by biocompatible mesh pores and current-avoidance sensors.</p>
-    </div>
-    <div class="tech-card reveal reveal-delay-1">
-      <div class="tech-card-label">System 02 — NeuralSweep AI</div>
-      <h3 class="tech-card-title">Intelligent Navigation</h3>
-      <p class="tech-card-body">NeuralSweep is our proprietary onboard AI that fuses local waterway maps, lidar point clouds, lidar point clouds, and hull-mounted radar to build live debris density maps. The system plans optimal collection routes, dynamically avoids marine wildlife, coordinates with other fleet vessels to prevent redundant sweeping, and uploads hourly telemetry to shore operations.</p>
-    </div>
-    <div class="tech-card reveal reveal-delay-1">
-      <div class="tech-card-label">System 03 — SortCore</div>
-      <h3 class="tech-card-title">Onboard Sorting Engine</h3>
-      <p class="tech-card-body">Collected material drops onto a conveyor beneath a computer-vision scanner trained to identify over 80 material types: PET bottles, HDPE packaging, fishing line, foam, metal, and more. Organic matter (algae, fish, aquatic life) is identified and safely returned to the waterway via a bypass chute. Plastics are segregated by polymer type and compressed into 40kg bales.</p>
-    </div>
-    <div class="tech-card reveal reveal-delay-2">
-      <div class="tech-card-label">System 04 — ZeroTrace Drive</div>
+      <div class="tech-card-label">System 01 — ZeroTrace Drive</div>
       <h3 class="tech-card-title">Emissions-Free Propulsion</h3>
       <p class="tech-card-body">AquaSweep’s propulsion system pairs a high-torque dual BLDC motor configuration with a robust 1.25 kWh energy reserve. Powered by two 50Ah deep-cycle batteries, the system delivers consistent, reliable thrust for sustained operations. The dual-motor architecture ensures precise maneuvering and optimal energy efficiency, providing more than enough power to navigate challenging aquatic environments with a minimal environmental footprint.</p>
+    </div>
+    <div class="tech-card reveal reveal-delay-1">
+      <div class="tech-card-label">System 02 — Collector Array</div>
+      <h3 class="tech-card-title">The Collection Mechanism</h3>
+      <p class="tech-card-body">AquaSweep's conveyor belt is custom-designed and 3D-printed from lightweight, waterproof PLA composite, allowing rapid prototyping and field-replaceable modular sections. The belt runs on a variable-speed motor, adjustable in real time based on debris density — slowing for heavy loads and accelerating in sparse conditions to maximize coverage. Debris scooped at the bow is carried continuously aft to the onboard storage bay with no manual intervention required throughout the deployment cycle.</p>
+    </div>
+    <div class="tech-card reveal reveal-delay-1">
+      <div class="tech-card-label">System 03 — NeuralSweep AI</div>
+      <h3 class="tech-card-title">Intelligent Navigation</h3>
+      <p class="tech-card-body">NeuralSweep is AquaSweep's onboard computer vision system, powered by a fine-tuned YOLO model trained on waterway debris datasets. Dual cameras mounted at the bow feed a live video stream into the inference pipeline, enabling the vessel to detect and classify floating waste in real time. The system builds dynamic debris density maps to plan optimal collection routes, autonomously steers toward high-concentration zones, and uploads continuous telemetry to shore operations for remote monitoring.</p>
+    </div>
+    <div class="tech-card reveal reveal-delay-2">
+      <div class="tech-card-label">System 04 — BioGuard AI</div>
+      <h3 class="tech-card-title">Marine Life Preservation</h3>
+      <p class="tech-card-body">BioGuard is a secondary computer vision model running in parallel with NeuralSweep, dedicated entirely to wildlife protection. A camera trained on aquatic fauna continuously scans the conveyor belt during operation. If any live animal — fish, amphibian, or waterfowl — is detected on the belt, BioGuard immediately halts the conveyor and triggers an alert, preventing harm before the animal is returned safely to the water. Collection only resumes once the belt is confirmed clear.</p>
     </div>
   </div>
 </section>
